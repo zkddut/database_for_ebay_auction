@@ -1,0 +1,2 @@
+SELECT COUNT(UserID) FROM Users;
+

@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+<pset>
+
+    <!--
+        CS 145, FALL 2015
+        PROBLEM SET 2 SUBMISSION TEMPLATE
+
+        Please copy and paste your SQL queries (and potentially Python code
+        for the bonus question) into the appropriate spots below. 
+
+        When submitting SQL queries, please do not include the intitial 
+        %sql or %%sql IPython commands. Just include the SQL code.
+
+        DO NOT DELETE THE <![CDATA[ ... ]]> LINES IN EACH <answer> TAG!
+        Doing so will break the autograder. To avoid accidentally breaking
+        something, please leave all existing comments in this template
+        intact in your submission.
+    -->
+
+    <student>
+        <name>
+            <!-- Insert your full name on the line below. -->
+
+        </name>
+        <sunet>
+            <!-- Insert your SUNet ID (NOT your student ID number!) below. -->
+
+        </sunet>
+    </student>
+
+
+    <!-- BEGIN PROBLEM 1 -->
+    <answer number="1a">
+        <!-- Paste your solution to problem 1, part (a) below this line. --><![CDATA[
+	SELECT A, B
+	FROM T as t
+	WHERE 
+	    (1 <= (SELECT COUNT(*) FROM T as t2 WHERE t2.A = t.A AND t2.B = t.B AND (t2.C != t.C or t2.D != t.D)))
+        ]]><!-- End problem 1, part (a). -->
+    </answer>
+    <answer number="1b">
+        <!-- Paste your solution to problem 1, part (b) below this line. --><![CDATA[
+	SELECT A, B, C, D
+	FROM T as t
+	WHERE
+	    (1 <= (SELECT COUNT(*) FROM T as t2 WHERE t2.A = t.A AND (t2.B != t.B or t2.C != t.C or t2.D != t.D)))
+	    OR
+	    (1 <= (SELECT COUNT(*) FROM T as t2 WHERE t2.B = t.B AND (t2.A != t.A or t2.C != t.C or t2.D != t.D)))
+	    OR
+	    (1 <= (SELECT COUNT(*) FROM T as t2 WHERE t2.C = t.C AND (t2.A != t.A or t2.B != t.B or t2.D != t.D)))
+	    OR
+	    (1 <= (SELECT COUNT(*) FROM T as t2 WHERE t2.D = t.D AND (t2.A != t.A or t2.B != t.B or t2.C != t.C)))
+        ]]><!-- End problem 1, part (b). -->
+    </answer>
+    <answer number="1c">
+        <!-- Paste your solution to problem 1, part (c) below this line. --><![CDATA[
+	SELECT *
+	FROM T AS t1, T AS t2
+	WHERE t1.A = t2.A AND NOT EXISTS (
+	    SELECT *
+	    FROM T AS t3
+	    WHERE t3.A = t1.A
+		AND (t3.B = t1.B AND t3.D = t1.D)
+		AND t3.C = t2.C);
+        ]]><!-- End problem 1, part (c). -->
+    </answer>
+    <answer number="1d">
+        <!-- Paste your solution to problem 1, part (d) below this line. --><![CDATA[
+	SELECT owner_name
+	FROM Dog as d1
+	WHERE NOT EXISTS(
+	    SELECT *
+	    FROM Owner as o1
+	    WHERE d1.owner_name = o1.owner_name)
+	UNION ALL
+	SELECT owner_name
+	FROM Owner as o1
+	WHERE NOT EXISTS(
+	    SELECT *
+	    FROM Dog as d1
+	    WHERE d1.owner_name = o1.owner_name);
+        ]]><!-- End problem 1, part (d). -->
+    </answer>
+    <!-- END PROBLEM 1 -->
+
+
+    <!-- BEGIN PROBLEM 2 -->
+    <answer number="2a">
+        <!-- Paste your solution to problem 2, part (a) below this line. --><![CDATA[
+	def to_set(x):
+	    if type(x) == set:
+		return x
+	    elif type(x) in [list, set]:
+		return set(x)
+	    elif type(x) in [str, int]:
+		return set([x])
+	    else:
+		raise Exception("Unrecognized type.")
+	def fd_to_str((lhs,rhs)): return ",".join(to_set(lhs)) + " -> " + ",".join(to_set(rhs))
+	def fds_to_str(fds): return "\n\t".join(map(fd_to_str, fds))
+	def set_to_str(x): return "{" + ",".join(x) + "}"
+	def fd_applies_to(fd, x): 
+	    lhs, rhs = map(to_set, fd)
+	    return lhs.issubset(x)
+	def compute_closure(x, fds, verbose=False):
+	    bChanged = True        # We will repeat until there are no changes.
+	    x_ret    = to_set(x).copy()    # Make a copy of the input to hold x^{+}
+	    while bChanged:
+		bChanged = False   # Must change on each iteration
+		for fd in fds:     # loop through all the FDs.
+		    (lhs, rhs) = map(to_set, fd) # recall: lhs -> rhs
+		    if fd_applies_to(fd, x_ret) and not rhs.issubset(x_ret):
+			x_ret = x_ret.union(rhs)
+			if verbose:
+			    print("Using FD " + fd_to_str(fd))
+			    print("\t Updated x to " + set_to_str(x_ret))
+			bChanged = True
+	    return x_ret
+
+	def is_superkey_for(A, X, fds, verbose=False): 
+	    return X.issubset(compute_closure(A, fds, verbose=verbose))
+
+	import itertools
+	def is_key_for(A, X, fds, verbose=False):
+	    subsets = set(itertools.combinations(A, len(A)-1))
+	    return is_superkey_for(A, X, fds) and \
+		all([not is_superkey_for(set(SA), X, fds) for SA in subsets])
+
+	R = set(['A','B','C','D','E'])
+
+	F_1 = [(set(['A','B']), set(['C','D','E'])),
+	     (set(['A','C']), set(['B','D','E'])),
+	     (set(['A','D']), set(['C','B','E'])),
+	     (set(['A','E']), set(['C','D','B'])),
+	     (set(['B','C']), set(['A','D','E'])),
+	     (set(['B','D']), set(['A','C','E'])),
+	     (set(['B','E']), set(['A','D','C'])),
+	     (set(['C','D']), set(['A','B','E'])),
+	     (set(['C','E']), set(['A','B','D'])),
+	     (set(['D','E']), set(['A','B','C']))]
+	     
+	print is_key_for(set(['A','B']), R, F_1)
+	print is_key_for(set(['A','C']), R, F_1)
+	print is_key_for(set(['A','D']), R, F_1)
+	print is_key_for(set(['A','E']), R, F_1)
+	print is_key_for(set(['B','C']), R, F_1)
+	print is_key_for(set(['B','D']), R, F_1)
+	print is_key_for(set(['B','E']), R, F_1)
+	print is_key_for(set(['C','D']), R, F_1)
+	print is_key_for(set(['C','E']), R, F_1)
+	print is_key_for(set(['D','E']), R, F_1)
+
+	F_2 = [(set(['A','B','C']), set(['D','E'])),
+	     (set(['A','B','D']), set(['C','E'])),
+	     (set(['A','B','E']), set(['C','B'])),
+	     (set(['A','C','D']), set(['B','E'])),
+	     (set(['A','C','E']), set(['B','D'])),
+	     (set(['A','D','E']), set(['B','C'])),
+	     (set(['B','C','D']), set(['A','E'])),
+	     (set(['B','C','E']), set(['A','D'])),
+	     (set(['B','D','E']), set(['A','C'])),
+	     (set(['C','D','E']), set(['A','B']))]
+	    
+	print is_key_for(set(['A','B','C']), R, F_2)
+	print is_key_for(set(['A','B','D']), R, F_2)
+	print is_key_for(set(['A','B','E']), R, F_2)
+	print is_key_for(set(['A','C','D']), R, F_2)
+	print is_key_for(set(['A','C','E']), R, F_2)
+	print is_key_for(set(['A','D','E']), R, F_2)
+	print is_key_for(set(['B','C','D']), R, F_2)
+	print is_key_for(set(['B','C','E']), R, F_2)
+	print is_key_for(set(['B','D','E']), R, F_2)
+	print is_key_for(set(['C','D','E']), R, F_2)
+        ]]><!-- End problem 2, part (a). -->
+    </answer>
+    <answer number="2b">
+        <!-- Paste your solution to problem 2, part (b) below this line. --><![CDATA[
+            DROP TABLE IF EXISTS R; 
+            CREATE TABLE R (A int, B int, C int, D int);
+	    INSERT INTO R VALUES(0,0,0,0);
+	    INSERT INTO R VALUES(0,1,0,1);
+	    INSERT INTO R VALUES(1,0,1,0);
+	    INSERT INTO R VALUES(1,1,1,1);
+	    INSERT INTO R VALUES(2,2,0,0);
+        ]]><!-- End problem 2, part (b). -->
+    </answer>
+    <!-- END PROBLEM 2 -->
+
+
+    <!-- BEGIN PROBLEM 3 -->
+    <answer number="3a">
+        <!-- Paste your solution to problem 3, part (a) below this line. --><![CDATA[
+	DROP TABLE IF EXISTS A; 
+	DROP TABLE IF EXISTS B; 
+	DROP TABLE IF EXISTS C; 
+	CREATE TABLE A (X int, Y int, Z int);
+	CREATE TABLE B (X int, Y int, Z int);
+	CREATE TABLE C (X int, Y int, Z int);
+        ]]><!-- End problem 3, part (a). -->
+    </answer>
+    <answer number="3b">
+        <!-- Paste your solution to problem 3, part (b) below this line. --><![CDATA[
+	DROP TABLE IF EXISTS A; 
+	DROP TABLE IF EXISTS B; 
+	DROP TABLE IF EXISTS C; 
+	CREATE TABLE A (X int, Y int, Z int);
+	CREATE TABLE B (X int, Y int, Z int);
+	CREATE TABLE C (X int, Y int, Z int);
+
+	INSERT INTO A VALUES(1,2,0);
+	INSERT INTO A VALUES(2,1,0);
+	INSERT INTO A VALUES(1,1,0);
+	INSERT INTO A VALUES(2,2,0);
+
+	INSERT INTO B VALUES(1,2,0);
+	INSERT INTO B VALUES(2,1,0);
+	INSERT INTO B VALUES(1,1,0);
+
+	INSERT INTO C VALUES(1,2,0);
+	INSERT INTO C VALUES(2,1,0);
+	INSERT INTO C VALUES(1,1,0);
+	INSERT INTO C VALUES(2,2,0);
+	INSERT INTO C VALUES(1,3,0);
+        ]]><!-- End problem 3, part (b). -->
+    </answer>
+    <!-- END PROBLEM 3 -->
+
+
+    <!-- BEGIN BONUS -->
+    <answer number="bonus">
+        <!-- Paste your solution to bonus problem below this line. --><![CDATA[
+	From A↠B We know 
+	    t3[A]=t1[A]=t2[A]
+	    t3[B]=t2[B]
+	And From B↠C We know
+	    t3[B]=t1[B]=t2[B]
+	    t3[C]=t2[C]
+	    t3[R\C]=t2[R\C]
+	So we can say
+	    t3[A]=t1[A]=t2[A]
+	    t3[B]=t2[B]
+	    t3[C]=t2[C]
+	    t3[R\C]=t2[R\C]
+	Which IS
+	    t3[A]=t1[A]=t2[A]
+	    t3[C]=t2[C]
+	    t3[R\C] ∪ t3[B]=t2[R\C] ∪ t2[B]    
+	AS C\B ⊆ C we can say
+	    t3[A]=t1[A]=t2[A]
+	    t3[C\B]=t2[C\B]
+	    t3[R\C] ∪ t3[B]=t2[R\C] ∪ t2[B]  
+	And AS R ∖ (C ∖ B)  =  (R ∖ C) ∪ (B)
+	We can say
+	    t3[A]=t1[A]=t2[A]
+	    t3[C\B]=t2[C\B]
+	    t3[R\(C\B)]=t2[R\(C\B)] 
+
+	This is the define for A↠C∖B
+        ]]><!-- End bonus problem. -->
+    </answer>
+    <!-- END BONUS -->
+
+</pset>

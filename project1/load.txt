@@ -1,0 +1,47 @@
+.separator |
+.import Items.dat Items
+.import Category_belong.dat Category_belong
+.import Bids.dat Bids
+.import Users.dat Users
+.import Category.dat Category
+
+UPDATE Items SET BuyPrice = null WHERE BuyPrice = "Null";
+UPDATE Bids SET Location = null WHERE Location = "Null";
+UPDATE Bids SET Country = null WHERE Country = "Null";
+
+UPDATE Items SET ItemID = CAST(ItemID AS INTEGER);
+UPDATE Items SET Name = CAST(Name AS varchar(255) );
+UPDATE Items SET Currently = CAST(Currently AS REAL);
+UPDATE Items SET BuyPrice = CAST(BuyPrice AS REAL);
+UPDATE Items SET First_Bid = CAST(First_Bid AS REAL);
+UPDATE Items SET Number_of_Bids = CAST(Number_of_Bids AS INTEGER);
+UPDATE Items SET Location = CAST(Location AS varchar(255));
+UPDATE Items SET Country = CAST(Country AS varchar(255));
+UPDATE Items SET Started = CAST(Started AS varchar(255));
+UPDATE Items SET Ends = CAST(Ends AS varchar(255));
+UPDATE Items SET Seller_UserID = CAST(Seller_UserID AS varchar(255));
+UPDATE Items SET Description = CAST(Description AS varchar(255));
+
+UPDATE Category_belong SET ItemID = CAST(ItemID AS INTEGER);
+UPDATE Category_belong SET Category = CAST(Category AS varchar(255));
+
+UPDATE Bids SET Time = CAST(Time AS varchar(255));
+UPDATE Bids SET ItemID = CAST(ItemID AS INTEGER);
+UPDATE Bids SET Amount = CAST(Amount AS REAL);
+UPDATE Bids SET Bidder_UserID = CAST(Bidder_UserID AS varchar(255));
+UPDATE Bids SET Location = CAST(Location AS varchar(255));
+UPDATE Bids SET Country = CAST(Country AS varchar(255));
+
+UPDATE Users SET UserID = CAST(UserID AS varchar(255));
+UPDATE Users SET Rating = CAST(Rating AS INTEGER);
+
+UPDATE Category SET Category = CAST(Category AS varchar(255));
+
+
+
+
+
+
+
+
+

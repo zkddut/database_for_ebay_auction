@@ -1,0 +1,321 @@
+<?xml version="1.0"?>
+<pset>
+
+    <!--
+        CS 145, FALL 2015
+        PROBLEM SET 1 SUBMISSION TEMPLATE
+
+        Please copy and paste your SQL queries (and potentially Python code
+        for the bonus question) into the appropriate spots below. 
+
+        When submitting SQL queries, please do not include the intitial 
+        %sql or %%sql IPython commands. Just include the SQL code.
+
+        DO NOT DELETE THE <![CDATA[ ... ]]> LINES IN EACH <answer> TAG!
+        Doing so will break the autograder. To avoid accidentally breaking
+        something, please leave all existing comments in this template
+        intact in your submission.
+    -->
+
+    <student>
+        <name>
+            <!-- Insert your full name on the line below. -->
+            Kaidi Zhou 
+        </name>
+        <sunet>
+            <!-- Insert your SUNet ID (NOT your student ID number!) below. -->
+	    kaidiz
+        </sunet>
+    </student>
+
+
+    <!-- BEGIN PROBLEM 1 -->
+    <answer number="1a">
+        <!-- Paste your solution to problem 1, part (a) below this line. --><![CDATA[
+	SELECT j AS "i",i AS "j",val AS "val" FROM A ORDER BY i
+
+        ]]><!-- End problem 1, part (a). -->
+    </answer>
+    <answer number="1b">
+        <!-- Paste your solution to problem 1, part (b) below this line. --><![CDATA[
+	SELECT sum(a.val*b.val) AS "val*B"
+	FROM A as a, B as b
+	WHERE a.j = 1 AND b.j = 2 AND a.i = b.i
+
+        ]]><!-- End problem 1, part (b). -->
+    </answer>
+    <answer number="1c">
+        <!-- Paste your solution to problem 1, part (c) below this line. --><![CDATA[
+	SELECT sum(a.val*b.val) AS "val*B"
+	FROM A as a, B as b
+	WHERE a.i = 1 AND b.j = 2 AND a.j = b.i
+
+        ]]><!-- End problem 1, part (c). -->
+    </answer>
+    <answer number="1d">
+        <!-- Paste your solution to problem 1, part (d) below this line. --><![CDATA[
+	SELECT a.i AS "i", b.j AS "j", sum(a.val*b.val) AS "val*B"
+	FROM A as a, B as b
+	WHERE a.j = b.i
+	GROUP BY a.i, b.j
+
+        ]]><!-- End problem 1, part (d). -->
+    </answer>
+    <!-- END PROBLEM 1 -->
+
+
+    <!-- BEGIN PROBLEM 2 -->
+    <answer number="2a">
+        <!-- Paste your solution to problem 2, part (a) below this line. --><![CDATA[
+	SELECT p1.station_id, count(p1.station_id) AS "num_best_day"
+	FROM precipitation p1
+	LEFT OUTER JOIN precipitation p2
+	ON p1.day = p2.day AND p1.precipitation < p2.precipitation
+	WHERE p2.day IS NULL 
+	GROUP BY p1.station_id
+	HAVING count(p1.station_id) > 1
+	ORDER BY num_best_day DESC
+
+        ]]><!-- End problem 2, part (a). -->
+    </answer>
+    <answer number="2bi">
+        <!-- Paste your solution to problem 2, part (b.i) below this line. --><![CDATA[
+	SELECT x1.p as "median"
+	FROM X as x1
+	WHERE 
+	    (SELECT COUNT(*)
+	    FROM X as x2
+	    WHERE x1.p<x2.p)
+	    = 
+	    (SELECT COUNT(*)
+	    FROM X as x2
+	    WHERE x1.p>x2.p)
+
+        ]]><!-- End problem 2, part (b.i). -->
+    </answer>
+    <answer number="2bii">
+        <!-- Paste your solution to problem 2, part (b.ii) below this line. --><![CDATA[
+	SELECT AVG(DISTINCT p1.precipitation) as "median"
+	FROM precipitation as p1
+	WHERE 
+	    p1.station_id=376101
+	    AND
+	    (
+		(
+		(SELECT CAST( COUNT(*) AS float)/2
+		 FROM precipitation as p2
+		 WHERE p2.station_id=376101)
+		<= 
+		(SELECT COUNT(*)
+		 FROM precipitation as p2
+		 WHERE (p1.precipitation>=p2.precipitation) AND p2.station_id=376101)
+		)
+		AND
+		(
+		(SELECT CAST( COUNT(*) AS float)/2
+		 FROM precipitation as p2
+		 WHERE p2.station_id=376101)
+		<=
+		(SELECT COUNT(*) 
+		 FROM precipitation as p2
+		 WHERE (p1.precipitation<=p2.precipitation) AND p2.station_id=376101)
+		)
+	    )
+
+
+        ]]><!-- End problem 2, part (b.ii). -->
+    </answer>
+    <answer number="2c">
+        <!-- Paste your solution to problem 2, part (c) below this line. --><![CDATA[
+	SELECT p1.station_id, p1.precipitation AS "min_daily"
+	FROM precipitation as p1
+	WHERE 
+	    p1.precipitation != 0
+	GROUP BY p1.station_id
+	HAVING 
+	    MIN(p1.precipitation) 
+	    >= 
+	    ((SELECT MAX(p2.precipitation)
+	    FROM precipitation as p2) - 400)
+
+        ]]><!-- End problem 2, part (c). -->
+    </answer>
+    <answer number="2d">
+        <!-- Paste your solution to problem 2, part (d) below this line. --><![CDATA[
+	SELECT p1.station_id, p1.precipitation AS "min_daily"
+	FROM precipitation as p1
+	WHERE 
+	    p1.precipitation != 0
+	    AND
+	    (
+	    (SELECT p3.precipitation
+	    FROM precipitation as p3
+	    WHERE p3.station_id = p1.station_id and p3.precipitation !=0
+	    ORDER BY p3.precipitation
+	    LIMIT 1)
+	    >=
+	    ((SELECT p2.precipitation
+	    FROM precipitation as p2
+	    ORDER BY p2.precipitation DESC
+	    LIMIT 1) - 400)
+	    )
+
+        ]]><!-- End problem 2, part (d). -->
+    </answer>
+    <!-- END PROBLEM 2 -->
+
+
+    <!-- BEGIN PROBLEM 3 -->
+    <answer number="3a">
+        <!-- Paste your solution to problem 3, part (a) below this line. --><![CDATA[
+	SELECT s1.B AS "company", s1.d AS "distance"
+	FROM streets s1
+	WHERE 
+	    (s1.A = "Stanford" AND s1.d < 10 AND s1.direction = "F")
+	UNION
+	SELECT s2.B, s1.d + s2.d
+	FROM streets s1, streets s2
+	WHERE 
+	    (s1.A = "Stanford" AND s1.direction = "F" AND s1.B = s2.A AND (s1.d+s2.d)<=10 AND s2.direction = "F")
+	UNION
+	SELECT s3.B, s1.d+s2.d+s3.d
+	FROM streets s1, streets s2, streets s3
+	WHERE 
+	    (s1.A = "Stanford" AND ((s1.d+s2.d+s3.d) <= 10) AND s1.direction = "F" AND s1.B = s2.A AND s2.direction = "F" AND s2.B = s3.A AND s3.direction = "F")
+
+        ]]><!-- End problem 3, part (a). -->
+    </answer>
+    <answer number="3b">
+        <!-- Paste your solution to problem 3, part (b) below this line. --><![CDATA[
+	DROP VIEW IF EXISTS short_streets;
+	CREATE VIEW short_streets AS 
+	    SELECT s2.id, s2.direction, s2.A, s2.B, s2.d
+	    FROM streets s1, streets s2
+	    WHERE 
+		s1.A = "Stanford"
+		AND
+		s2.A = s1.B
+	    UNION
+	    SELECT s3.id, s3.direction, s3.A, s3.B, s3.d
+	    FROM streets s1, streets s2, streets s3
+	    WHERE 
+		s1.A = "Stanford"
+		AND
+		s2.A = s1.B
+		AND
+		s3.A = s2.B
+	    UNION
+	    SELECT s4.id, s4.direction, s4.A, s4.B, s4.d
+	    FROM streets s1, streets s2, streets s3, streets s4
+	    WHERE 
+		s1.A = "Stanford"
+		AND
+		s2.A = s1.B
+		AND
+		s3.A = s2.B
+		AND
+		s4.A = s3.B;
+
+	SELECT s1.A, s2.B, s1.d+s2.d
+	FROM short_streets s1, short_streets s2
+	WHERE
+	    (s1.B = "Stanford")
+	    AND
+	    ((s1.d + s2.d) <=15)
+	    AND
+	    (s1.B = s2.A)
+	    AND
+	    (s1.A != s2.B)
+	UNION
+	SELECT s1.A, s3.B, s1.d+s2.d+s3.d
+	FROM short_streets s1, short_streets s2, short_streets s3
+	WHERE
+	    (s1.B = "Stanford" OR s2.B="Stanford")
+	    AND
+	    ((s1.d + s2.d + s3.d) <=15)
+	    AND
+	    ((s1.B = s2.A) AND (s2.B=s3.A))
+	    AND
+	    (s1.A != s3.B)
+	UNION
+	SELECT s1.A, s4.B, s1.d+s2.d+s3.d+s4.d
+	FROM short_streets s1, short_streets s2, short_streets s3, short_streets s4
+	WHERE
+	    (s1.B = "Stanford" OR s2.B="Stanford" OR s3.B="Stanford")
+	    AND
+	    ((s1.d + s2.d + s3.d + s4.d) <=15)
+	    AND
+	    ((s1.B = s2.A) AND (s2.B=s3.A) AND (s3.B=s4.A))
+	    AND
+	    (s1.A != s4.B);
+
+        ]]><!-- End problem 3, part (b). -->
+    </answer>
+    <answer number="3c">
+        <!-- Paste your solution to problem 3, part (c) below this line. --><![CDATA[
+	DROP VIEW IF EXISTS tree_streets;
+	CREATE VIEW tree_streets AS 
+	SELECT *
+	FROM streets s
+	WHERE
+	    s.id NOT IN
+	    (
+	    SELECT s1.id
+	    FROM streets s1, streets s2, streets s3
+	    WHERE
+		((s1.B = s2.A) AND (s2.B=s3.A) AND (s3.B=s1.A))
+	    LIMIT 2
+	    );
+	    
+	SELECT * FROM tree_streets
+
+        ]]><!-- End problem 3, part (c). -->
+    </answer>
+    <answer number="3d">
+        <!-- Paste your solution to problem 3, part (d) below this line. --><![CDATA[
+	WITH RECURSIVE search_graph(id, direction, A, B, d, depth) AS (
+	    SELECT ts.id, ts.direction, ts.A, ts.B, ts.d, 1
+	    FROM tree_streets ts
+	   UNION
+	    SELECT ts2.id, ts2.direction, sg.A, ts2.B, ts2.d+sg.d, sg.depth + 1
+	    FROM tree_streets ts2, search_graph sg
+	    WHERE 
+	    ts2.A = sg.B
+	    AND
+	    ts2.id != sg.id
+	)
+	SELECT A, B, MAX(d) FROM search_graph;
+
+
+        ]]><!-- End problem 3, part (d). -->
+    </answer>
+    <!-- END PROBLEM 3 -->
+
+
+    <!-- BEGIN BONUS -->
+    <answer number="bonus1">
+        <!-- Paste your solution to bonus problem 1 below this line. --><![CDATA[
+	DROP TABLE IF EXISTS searchTable;
+	CREATE TABLE searchTable as SELECT ts.id AS id, ts.direction AS direction, ts.A AS A, ts.B AS B, ts.d AS d, 1 AS depth FROM tree_streets ts;
+	flag = 1;
+	max_depth = SELECT 0 FROM searchTable;
+	previous_depth = SELECT 0 FROM searchTable;
+	while (flag == 1) :
+	    INSERT INTO searchTable SELECT ts2.id, ts2.direction, sg.A, ts2.B, ts2.d+sg.d, sg.depth + 1 FROM tree_streets ts2, searchTable sg WHERE ts2.A = sg.B AND ts2.id != sg.id;
+	    streetsTable = SELECT depth FROM searchTable GROUP BY A,B HAVING COUNT(*) = 1;
+	    for depth in streetsTable:
+		if (depth > max_depth) :
+		    max_depth = depth;
+	    #print max_depth;
+	    if(previous_depth == max_depth):
+		break;
+	    previous_depth = max_depth;
+		
+	SELECT A, B, MAX(d), depth FROM searchTable;
+
+
+        ]]><!-- End bonus problem 1. -->
+    </answer>
+    <!-- END BONUS -->
+
+</pset>

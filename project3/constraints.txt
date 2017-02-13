@@ -1,0 +1,54 @@
+• Constraints for Users
+1. No two users can share the same User ID.
+	PRIMARY KEY
+	In create.sql, set table Users attribute UserID PRIMARY KEY
+2. All sellers and bidders must already exist as users.
+	FOREIGN KEY
+	In create.sql, set table Items attribute UserID refer foreign key in table Users, 
+		       set table Bids attribute UserID refer foreign key in table Users
+• Constraints for Items
+3. No two items can share the same Item ID.
+	PRIMARY KEY
+	In create.sql, set table Items attribute ItemID PRIMARY KEY
+4. Every bid must correspond to an actual item.
+	FOREIGN KEY
+	In create.sql, set table Bids attribute ItemID refer foreign key in table Items
+5. The items for a given category must all exist.
+	FOREIGN KEY
+	In create.sql, set table Category attribute ItemID refer foreign key in table Items 
+6. An item cannot belong to a particular category more than once.
+	PRIMARY KEY
+	In create.sql, set table Category attribute (ItemID, Category) PRIMARY KEY
+7. The end time for an auction must always be after its start time.
+	Check constraint
+	In create.sql, check table Items attribute check(End > Started),
+8. The Current Price of an item must always match the Amount of the most recent bid for that item.
+	Trigger Update
+	In trigger1_add.sql, when inserting a bid, trigger will update table Items attribute Currently as the amount in new Bids tuple
+• Constraints for Bidding
+9. A user may not bid on an item he or she is also selling.
+	Trigger Check
+	In trigger2_add.sql, when inserting a bid, we will check if UserID is same as UserID in table Items for this bid Items	
+10. No auction may have two bids at the exact same time.
+	Trigger Check
+	In trigger3_add.sql, when inserting a bid, we will check if Time of new bid same as any bid Time with same ItemID
+11. No auction may have a bid before its start time or after its end time.
+	Trigger Check
+	In trigger4_add.sql, when inserting a bid, we will check if attribute Time is latter than End attribute or earlier than Started in table Items
+12. No user can make a bid of the same amount to the same item more than once.
+	PRIMARY KEY
+	In create.sql, set table Bids attribute (ItemID, Amount, UserID) PRIMARY KEY	
+13. In every auction, the Number of Bids attribute corresponds to the actual number of bids for that particular item.
+	Trigger Update
+	In trigger5_add.sql, when inserting a bid, trigger will update table Items tuple attribute Number_of_Bids+1 with matched ItemID
+14. Any new bid for a particular item must have a higher amount than any of the previous bids for that particular item.
+	Trigger Check
+	In trigger6_add.sql, when inserting a bid, we will check if Amount is higher than all other Amount with same ItemID	
+• Constraints for Time
+15. All new bids must be placed at the time which matches the current time of your AuctionBase system. 
+	Trigger Check
+	In trigger7_add.sql, when inserting a bid, we will check if Time is same as CurrentTime in Table CurrentTime	
+16. The current time of your AuctionBase system can only advance forward in time, not backward in time.
+	Trigger Check
+	In trigger8_add.sql, when update the CurrentTime in Table CurrentTime, we will check it is latter than the old one.	
+

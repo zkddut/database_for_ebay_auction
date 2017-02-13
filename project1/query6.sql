@@ -1,0 +1,4 @@
+SELECT COUNT(DISTINCT Seller_UserID)
+FROM Items
+WHERE Seller_UserID IN (SELECT Bidder_UserID FROM Bids)
+;

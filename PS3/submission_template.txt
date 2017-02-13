@@ -1,0 +1,362 @@
+<?xml version="1.0"?>
+<pset>
+
+    <!--
+        CS 145, FALL 2015
+        PROBLEM SET 3 SUBMISSION TEMPLATE
+
+        Please copy and paste your solutions into the appropriate spots below. 
+
+        When submitting SQL queries, please do not include the intitial 
+        %sql or %%sql IPython commands. Just include the SQL code.
+
+        DO NOT DELETE THE <![CDATA[ ... ]]> LINES IN EACH <answer> TAG!
+        Doing so will break the autograder. To avoid accidentally breaking
+        something, please leave all existing comments in this template
+        intact in your submission.
+    -->
+
+    <student>
+        <name>
+            <!-- Insert your full name on the line below. -->
+	    Kaidi Zhou
+        </name>
+        <sunet>
+            <!-- Insert your SUNet ID (NOT your student ID number!) below. -->
+	    kaidiz
+        </sunet>
+    </student>
+
+
+    <!-- BEGIN PROBLEM 1 -->
+    <answer number="1a">
+        <!-- Paste your solution to problem 1, part (a) below this line. --><![CDATA[
+	# YOUR REASONING HERE
+	#1. Splite run and sort run
+	#  As buffer pages are B + 1 = 10. We can have 10 pages in a run and 90/10 = 9 runs total
+	#  each run need 10 sequential page read and 10 page write, so 
+	#  IO cost = 9 * (1 + 10) = 99
+	#2. Merge Pass 1
+	#  As we ALWAYS read in 3-page sequentially, we can only do 3-way merge cause (B / 3 page) = 3 ways
+	#  So for merge pass 1, we will do 3 3-way merge to transfer 9 '10 pages run' into 3 '30 pages run'.
+	#  each run need 4 sequential read (10/3 ~= 4) and 10 page write
+	#  IO cost = 3 * (4*3 + 10*3) = 126
+	#3. Merge Pass2
+	#  In this pass, we will do 3 3-way merge to transfer 3 '30 pages run' into 1 '90 pages run' and complete merge sort.
+	#  each run need 10 sequential read (30/3 = 30) and 30 page write
+	#  IO cost = 1 * (10*3 + 30*3) = 120
+
+	p1a_cost = 345
+        ]]><!-- End problem 1, part (a). -->
+    </answer>
+    <answer number="1b_i">
+        <!-- Paste your solution to problem 1, part (b.i) below this line. --><![CDATA[
+	def cost_initial_runs(B, N, P):
+	    # YOUR CODE HERE
+	    # For intial run, its size is decided by buffer size
+	    return ( (N / ( B + 1 )) * (1 + (B + 1)) ) # num of run * (read IO in a run + write IO in a run)
+        ]]><!-- End problem 1, part (b.i). -->
+    </answer>
+    <answer number="1b_ii">
+        <!-- Paste your solution to problem 1, part (b.ii) below this line. --><![CDATA[
+	def cost_per_pass(B, N, P):
+	    # YOUR CODE HERE
+	    return ( N * ( 1/P + 1 ) ) # each pass we need read N/P IO and write N IO
+        ]]><!-- End problem 1, part (b.ii). -->
+    </answer>
+    <answer number="1b_iii">
+        <!-- Paste your solution to problem 1, part (b.iii) below this line. --><![CDATA[
+	import math
+	def num_passes(B, N, P):
+	    # YOUR CODE HERE
+	    return math.ceil(math.log((N/(B+1)),math.floor(B/P))) #B/P need floor cause we cannot overflow the buffer 
+								  #and log need ceil cause we want to finish all pass
+	def external_merge_sort_cost(B, N, P):
+	    return cost_initial_runs(B,N,P) + cost_per_pass(B,N,P)*num_passes(B,N,P)
+        ]]><!-- End problem 1, part (b.iii). -->
+    </answer>
+    <answer number="1c">
+        <!-- Paste your solution to problem 1, part (c) below this line. --><![CDATA[
+	# Save the tuples to generate an IO cost plot vs. P here
+	B = 29
+	N = 900
+	feasible_p_range = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)# FILL THIS IN
+	#feasible_p_range = (1,2,3)
+	p1_points = [(p, external_merge_sort_cost(B, N, p)) for p in feasible_p_range]
+
+	#for p in feasible_p_range:
+	#    print p
+	#    c = external_merge_sort_cost(B, N, p)
+	#    print c
+
+	# Save the optimal value here
+	P_opt = (2, 3, 4)
+
+	# ONE SENTENCE OF EXPLANATION HERE
+	# With P increase, the cost_per_pass will decrease but the num_of_pass will increase. That's why we see IO cost will 
+	# increase after P bigger than certain point
+        ]]><!-- End problem 1, part (c). -->
+    </answer>
+    <!-- END PROBLEM 1 -->
+
+
+    <!-- BEGIN PROBLEM 2 -->
+    <answer number="2a">
+        <!-- Paste your solution to problem 2, part (a) below this line. --><![CDATA[
+	A_P_R = 4
+	A_P_S = 4
+	A_B = 2
+	A_IO_cost_1 = 3* (4+4) = 24
+	A_IO_cost_2 = 2*4*2 + 2*4*2 + 4 + 4 = 40
+
+	# Explanation: 
+	# HJ IO cost ~3(P(R)+P(S))+ OUT # As long as B2≥P(R) 
+	# SMJ IO cost ~ Sort(P(R)) + Sort(P(S)) + P(R) + P(S) +OUT # Sort(N) = 2𝑁*(logB(𝑵/B+1) + 1) # don't consider worst case for scan > P(R)*P(S)
+        ]]><!-- End problem 2, part (a). -->
+    </answer>
+    <answer number="2b">
+        <!-- Paste your solution to problem 2, part (b) below this line. --><![CDATA[
+	B_P_R = 64
+	B_P_S = 64
+	B_B = 8
+	B_IO_cost_1 = 3* (64+64) = 384
+	B_IO_cost_2 = 64 + (64*64/9) = 520
+
+	# Explanation: 
+	# HJ IO cost ~3(P(R)+P(S))+ OUT # As long as As long as B2≥P(R)
+	# BNLJ IO cost P(R) + (P(R)*P(S)/(B+1))  
+        ]]><!-- End problem 2, part (b). -->
+    </answer>
+    <answer number="2c">
+        <!-- Paste your solution to problem 2, part (c) below this line. --><![CDATA[
+	C_P_R = 4
+	C_P_S = 4
+	C_B = 2
+	C_IO_cost_1 = 4 + (4*4/3) = 10
+	C_IO_cost_2 = 2*4*2 + 2*4*2 + 4 + 4 = 40 
+
+	# Explanation: 
+	# BNLJ IO cost P(R) + (P(R)*P(S)/(B+1)) 
+	# SMJ IO cost ~ Sort(P(R)) + Sort(P(S)) + P(R) + P(S) +OUT # Sort(N) = 2𝑁*(logB(𝑵/B+1) + 1)
+        ]]><!-- End problem 2, part (c). -->
+    </answer>
+    <!-- END PROBLEM 2 -->
+
+
+    <!-- BEGIN PROBLEM 3 -->
+    <answer number="3">
+        <!-- Paste your solution to problem 3 below this line. --><![CDATA[
+	from collections import deque
+
+	def lru_cost(N, M, B):
+	    # YOUR CODE HERE
+	    readin = 1
+	    Buffer = deque([])
+	    counter = 0
+	    for i in range (0, M):
+		if (len(Buffer) != B):
+		    Buffer.append(readin)
+		    counter=counter+1
+		else:
+		    if readin in Buffer:
+			Buffer.remove(readin)
+			Buffer.append(readin)
+		    else:
+			Buffer.popleft()
+			Buffer.append(readin)
+			counter=counter+1
+		# for next read in from N
+		if (readin == N):
+		    readin=1
+		else:
+		    readin=readin+1
+		#print Buffer
+	    return counter
+
+
+	def mru_cost(N, M, B):
+	    # YOUR CODE HERE
+	    readin = 1
+	    Buffer = []
+	    counter = 0
+	    for i in range (0, M):
+		if (len(Buffer) != B):
+		    Buffer.append(readin)
+		    counter=counter+1
+		else:
+		    if readin in Buffer:
+			Buffer.remove(readin)
+			Buffer.append(readin)
+		    else:
+			Buffer.pop()
+			Buffer.append(readin)
+			counter=counter+1
+		# for next read in from N
+		if (readin == N):
+		    readin=1
+		else:
+		    readin=readin+1
+		#print Buffer
+	    return counter
+	    
+	# ONE SENTENCE OF EXPLANATION HERE
+	# in function lru_cost and mru_cost, I implment the algrothem for lru and mru and 
+	# count the IO cost whenever a new element is push into buffer
+
+	B = 4
+	N = 7
+	M = 20
+	#print lru_cost(N, M, B)
+	#print mru_cost(N, M, B)
+	p3_points = [(m, abs(lru_cost(N, m, B) - mru_cost(N, m, B))) for m in range(1, M+1)]
+        ]]><!-- End problem 3. -->
+    </answer>
+    <!-- END PROBLEM 3 -->
+
+
+    <!-- BEGIN PROBLEM 4 -->
+    <answer number="4a_i">
+        <!-- Paste your solution to problem 4, part (a.i) below this line. --><![CDATA[
+	# C- total number of chefs (10000 in our example)
+	# R- number of restaurants (100 in our example)
+	# return value - list of tuples representing (restaurant ID, number of chefs assigned to that restaurant) points
+	from random import randint
+	def histogramPoints(C,R):
+	    points = []
+	    # Start code here
+	    tmp_array = []
+	    for i in range (0, R):
+		tmp_array.append(0)
+	    for c in range (0, C):
+		s = 'C'
+		s+=str(c).zfill(4)
+		#print s
+		#r = randint(1, R)
+		#print r
+		ha = h(s,R)
+		#print ha
+		tmp_array[ha] = tmp_array[ha] + 1
+	    for i in range (0, R):
+		points.append((i,tmp_array[i]))
+	    # End code here
+	    return points
+        ]]><!-- End problem 4, part (a.i). -->
+    </answer>
+    <answer number="4a_ii">
+        <!-- Paste your solution to problem 4, part (a.ii) below this line. --><![CDATA[
+	# C- total number of chefs (10000 in our example)
+	# R- number of restaurants (100 in our example)
+	# return value - a float representing the skew of hash function (i.e. stdev of chefs assigned to each restaurant)
+	import numpy as np
+
+	def calculateSkew(C,R):
+	    # Start code here
+	    v = float(0)
+	    tmp_point = []
+	    standard = float(C)/float(R)
+	    chefPoints = histogramPoints(10000, 100)
+	    for point in chefPoints:
+		tmp_point.append(float(point[1]))
+	    #print np.std(tmp_point)
+	    return np.std(tmp_point)
+	    # End code here
+
+	skew = calculateSkew(10000,100)
+	print skew
+        ]]><!-- End problem 4, part (a.ii). -->
+    </answer>
+    <answer number="4a_iii">
+        <!-- Paste your solution to problem 4, part (a.iii) below this line. --><![CDATA[
+	# C- total number of chefs (10000 in our example)
+	# R- number of restaurants (100 in our example)
+	# return value - difference between real runtime (with some skew) and ideal (no skew)
+	def runtimeDiff(C,R):
+	    # Start code here
+	    runtime = 0
+	    standard_runtime = 100*(100*100)
+	    chefPoints = histogramPoints(10000, 100)
+	    for point in chefPoints:
+		runtime = runtime + (point[1] * point[1])
+	    return runtime - standard_runtime
+	    # End code here
+	print runtimeDiff(10000,100)
+        ]]><!-- End problem 4, part (a.iii). -->
+    </answer>
+    <answer number="4b">
+        <!-- Paste your solution to problem 4, part (b) below this line. --><![CDATA[
+	# C- total number of chefs (10000 in our example)
+	# R- number of restaurants (100 in our example)
+	# return value - list of tuples representing (restaurant ID, number of chefs assigned to that restaurant) points
+	def betterHistogramPoints(C,R):
+	    points = []
+	    # Start code here
+	    tmp_array = []
+	    for i in range (0, R):
+		tmp_array.append(0)
+	    for c in range (0, C):
+		s = 'C'
+		s+=str(c).zfill(4)
+		#print s
+		#r = randint(1, R)
+		#print r
+		ha = hash(s) % 100
+		#print ha
+		tmp_array[ha] = tmp_array[ha] + 1
+	    for i in range (0, R):
+		points.append((i,tmp_array[i]))
+	    # End code here
+	    return points
+        ]]><!-- End problem 4, part (b). -->
+    </answer>
+    <!-- END PROBLEM 1 -->
+
+
+    <!-- BEGIN BONUS -->
+    <answer number="bonus_problem">
+        <!-- Paste your solution to bonus problem below this line. --><![CDATA[
+	# Your better hash function
+	def bonusH(x,n):
+	    # Start code here
+	    #print x[1:]
+	    ha = int(x[1:])%n
+	    return ha
+	    # End code here
+
+	# Histogram points based off of your better hash function
+	def bonusHistogramPoints(C,R):
+	    points = []
+	    # Start code here
+	    tmp_array = []
+	    for i in range (0, R):
+		tmp_array.append(0)
+	    for c in range (0, C):
+		s = 'C'
+		s+=str(c).zfill(4)
+		#print s
+		#r = randint(1, R)
+		#r = c%100 + 1
+		#print r
+		ha = bonusH(s,R)
+		#print ha
+		tmp_array[ha] = tmp_array[ha] + 1
+	    for i in range (0, R):
+		points.append((i,tmp_array[i]))
+	    # End code here
+	    return points
+
+	# Difference between the runtime with your hash function and the idea runtime (with no skew)
+	def bonusRuntimeDiff(C,R):
+	    # Start code here
+	    runtime = 0
+	    standard_runtime = 100*(100*100)
+	    chefPoints = bonusHistogramPoints(10000, 100)
+	    for point in chefPoints:
+		runtime = runtime + (point[1] * point[1])
+	    return runtime - standard_runtime
+	    # End code here
+	print bonusRuntimeDiff(10000,100)
+        ]]><!-- End bonus problem. -->
+    </answer>
+    <!-- END BONUS -->
+
+</pset>
